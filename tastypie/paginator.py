@@ -44,7 +44,7 @@ class Paginator(object):
         self.offset = offset
         self.resource_uri = resource_uri
         self.collection_name = collection_name
-
+        
     def get_limit(self):
         """
         Determines the proper maximum number of results to return.

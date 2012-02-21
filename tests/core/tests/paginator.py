@@ -184,14 +184,7 @@ class PaginatorTestCase(TestCase):
             'slug__startswith': u'☃',
             'format': 'json',
         }
-        paginator = Paginator(request, self.data_set, resource_uri='/api/v1/notes/', limit=2, offset=2)
-        meta = paginator.page()['meta']
-        self.assertEqual(meta['limit'], 2)
-        self.assertEqual(meta['offset'], 2)
-        self.assertEqual(meta['previous'], '/api/v1/notes/?slug__startswith=%E2%98%83&offset=0&limit=2&format=json')
-        self.assertEqual(meta['next'], u'/api/v1/notes/?slug__startswith=%E2%98%83&offset=4&limit=2&format=json')
-        self.assertEqual(meta['total_count'], 6)
-
+        
         request = QueryDict('slug__startswith=☃&format=json')
         paginator = Paginator(request, self.data_set, resource_uri='/api/v1/notes/', limit=2, offset=2)
         meta = paginator.page()['meta']

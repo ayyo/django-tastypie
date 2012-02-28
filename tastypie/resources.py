@@ -67,6 +67,7 @@ class ResourceOptions(object):
     limit = getattr(settings, 'API_LIMIT_PER_PAGE', 20)
     max_limit = 1000
     api_name = None
+    _api_name_accept_header = None
     resource_name = None
     urlconf_namespace = None
     default_format = 'application/json'
@@ -635,7 +636,8 @@ class Resource(object):
             'resource_name': self._meta.resource_name,
         }
 
-        if self._meta.api_name is not None:
+        if (self._meta.api_name is not None and
+            not self._meta._api_name_accept_header):
             kwargs['api_name'] = self._meta.api_name
 
         if bundle_or_obj is not None:
@@ -2074,6 +2076,10 @@ class ModelResource(Resource):
             kwargs[self._meta.detail_uri_name] = bundle_or_obj.obj.pk
         else:
             kwargs[self._meta.detail_uri_name] = bundle_or_obj.id
+
+        if (self._meta.api_name is not None and
+            not self._meta._api_name_accept_header):
+            kwargs['api_name'] = self._meta.api_name
 
         return kwargs
 

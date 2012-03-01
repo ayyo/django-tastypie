@@ -3,7 +3,7 @@ import logging
 import warnings
 import django
 from django.conf import settings
-from django.conf.urls.defaults import patterns, url
+from django.conf.urls.defaults import patterns, url, include
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned, ValidationError
 from django.core.urlresolvers import NoReverseMatch, reverse, resolve, Resolver404, get_script_prefix
 from django.db import transaction
@@ -66,8 +66,8 @@ class ResourceOptions(object):
     detail_allowed_methods = None
     limit = getattr(settings, 'API_LIMIT_PER_PAGE', 20)
     max_limit = 1000
+    _api = None
     api_name = None
-    _api_name_accept_header = None
     _reverse_url_prefix = '/'
     resource_name = None
     urlconf_namespace = None
@@ -639,7 +639,7 @@ class Resource(object):
         }
 
         if (self._meta.api_name is not None and
-            not self._meta._api_name_accept_header):
+            not self._meta._api._accept_header_routing):
             kwargs['api_name'] = self._meta.api_name
 
         if bundle_or_obj is not None:
@@ -683,8 +683,17 @@ class Resource(object):
 
         if prefix and chomped_uri.startswith(prefix):
             chomped_uri = chomped_uri[len(prefix)-1:]
-
         try:
+            # If we're doing Accept header routing, we resolve using the
+            # local urlconf because the global resolve() will give us the
+            # wildcard route into the AcceptHeaderRouter.
+            if self._meta._api._accept_header_routing:
+                prefix = self._meta._reverse_url_prefix
+                chomped_uri = chomped_uri[len(prefix):]
+                urls = patterns('',
+                    (r'', include(self._meta._api.urls)))
+                resolver = urls[0]
+                resolve = resolver.resolve
             view, args, kwargs = resolve(chomped_uri)
         except Resolver404:
             raise NotFound("The URL provided '%s' was not a link to a valid resource." % uri)
@@ -2080,7 +2089,7 @@ class ModelResource(Resource):
             kwargs[self._meta.detail_uri_name] = bundle_or_obj.id
 
         if (self._meta.api_name is not None and
-            not self._meta._api_name_accept_header):
+            not self._meta._api._accept_header_routing):
             kwargs['api_name'] = self._meta.api_name
 
         return kwargs

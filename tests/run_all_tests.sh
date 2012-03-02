@@ -4,7 +4,7 @@ PYTHONPATH=$PWD:$PWD/..${PYTHONPATH:+:$PYTHONPATH}
 export PYTHONPATH
 
 # complex
-ALL="core basic alphanumeric slashless namespaced related validation gis"
+ALL="core basic alphanumeric slashless namespaced related validation gis accept_header_routing"
 
 if [ $# -eq 0 ]; then
 	TYPES=$ALL

@@ -1170,12 +1170,12 @@ class Resource(object):
         deserialized = self.deserialize(request, request.raw_post_data, format=format)
         deserialized = self.alter_deserialized_list_data(request, deserialized)
 
-        if not 'objects' in deserialized:
+        if not self._meta.collection_name in deserialized:
             raise BadRequest("Invalid data sent.")
         self.obj_delete_list(request=request, **self.remove_api_resource_names(kwargs))
         bundles_seen = []
 
-        for object_data in deserialized['objects']:
+        for object_data in deserialized[self._meta.collection_name]:
             bundle = self.build_bundle(data=dict_strip_unicode_keys(object_data), request=request)
 
             # Attempt to be transactional, deleting any previously created
@@ -1191,7 +1191,7 @@ class Resource(object):
             return http.HttpNoContent()
         else:
             to_be_serialized = {}
-            to_be_serialized['objects'] = [self.full_dehydrate(bundle) for bundle in bundles_seen]
+            to_be_serialized[self._meta.collection_name] = [self.full_dehydrate(bundle) for bundle in bundles_seen]
             to_be_serialized = self.alter_list_data_to_serialize(request, to_be_serialized)
             return self.create_response(request, to_be_serialized, response_class=http.HttpAccepted)
 
@@ -1388,10 +1388,10 @@ class Resource(object):
                 bundle = self.build_bundle(data=dict_strip_unicode_keys(data), request=request)
                 self.obj_create(bundle, request=request)
 
-        if len(deserialized.get('deleted_objects', [])) and 'delete' not in self._meta.detail_allowed_methods:
+        if len(deserialized.get('deleted_%s' % (self._meta.collection_name, ), [])) and 'delete' not in self._meta.detail_allowed_methods:
             raise ImmediateHttpResponse(response=http.HttpMethodNotAllowed())
 
-        for uri in deserialized.get('deleted_objects', []):
+        for uri in deserialized.get('deleted_%s' % (self._meta.collection_name, ), []):
             obj = self.get_via_uri(uri, request=request)
             self.obj_delete(request=request, _obj=obj)
 
@@ -1494,7 +1494,7 @@ class Resource(object):
                 not_found.append(identifier)
 
         object_list = {
-            'objects': objects,
+            self._meta.collection_name: objects,
         }
 
         if len(not_found):

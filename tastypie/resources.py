@@ -647,6 +647,7 @@ class Resource(object):
         }
 
         if (self._meta.api_name is not None and
+            self._meta._api and # actually can be None
             not self._meta._api._accept_header_routing):
             kwargs['api_name'] = self._meta.api_name
 
@@ -1122,8 +1123,8 @@ class Resource(object):
         to_be_serialized = paginator.page()
 
         # Dehydrate the bundles in preparation for serialization.
-        bundles = [self.build_bundle(obj=obj, request=request) for obj in to_be_serialized['objects']]
-        to_be_serialized['objects'] = [self.full_dehydrate(bundle) for bundle in bundles]
+        bundles = [self.build_bundle(obj=obj, request=request) for obj in to_be_serialized[self._meta.collection_name]]
+        to_be_serialized[self._meta.collection_name] = [self.full_dehydrate(bundle) for bundle in bundles]
         to_be_serialized = self.alter_list_data_to_serialize(request, to_be_serialized)
         return self.create_response(request, to_be_serialized)
 
@@ -2107,6 +2108,7 @@ class ModelResource(Resource):
             kwargs[self._meta.detail_uri_name] = bundle_or_obj.id
 
         if (self._meta.api_name is not None and
+            self._meta._api and
             not self._meta._api._accept_header_routing):
             kwargs['api_name'] = self._meta.api_name
 

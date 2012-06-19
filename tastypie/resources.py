@@ -1119,11 +1119,7 @@ class Resource(object):
         objects = self.obj_get_list(request=request, **self.remove_api_resource_names(kwargs))
         sorted_objects = self.apply_sorting(objects, options=request.GET)
 
-<<<<<<< HEAD
         paginator = self._meta.paginator_class(request.GET, sorted_objects, resource_uri=self.get_resource_uri(), limit=self._meta.limit, max_limit=self._meta.max_limit, collection_name=self._meta.collection_name)
-=======
-        paginator = self._meta.paginator_class(request.GET, sorted_objects, resource_uri=self.get_resource_list_uri(), limit=self._meta.limit, collection_name=self._meta.collection_name)
->>>>>>> Add a custom name in objects collections
         to_be_serialized = paginator.page()
 
         # Dehydrate the bundles in preparation for serialization.

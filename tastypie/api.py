@@ -32,9 +32,14 @@ class Api(object):
     def __init__(self, api_name="v1"):
         self.api_name = api_name
         self._accept_header_routing = False
+        self._accept_header_subtype = 'vnd.api.{api_name}'
         self._reverse_url_prefix = '/'
         self._registry = {}
         self._canonicals = {}
+        
+    @property
+    def subtype(self):
+        return self._accept_header_subtype.format(api_name=self.api_name)
 
     def register(self, resource, canonical=True):
         """
@@ -218,7 +223,8 @@ class AcceptHeaderRouter(object):
     For requests with no name specified, we route to the Api instance that's
     registered with default=True
     """
-    def __init__(self):
+    def __init__(self, api_subtype='vnd.api.{api_name}'):
+        self.api_subtype = api_subtype
         self._registry = {}
         self._default_api_name = None
 
@@ -251,7 +257,10 @@ class AcceptHeaderRouter(object):
         # text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
         # So we need to split it apart for use with parse_media_range.
         ranges = self._accept_range.split(',')
-        ranges = [mimeparse.parse_media_range(m) for m in ranges]
+        try:
+            ranges = [mimeparse.parse_media_range(m) for m in ranges]
+        except ValueError:
+            raise BadRequest('Incorrect accept header')
         # Then sort the accepted types by their quality, best first.
         ranges.sort(
             lambda x, y: cmp(float(y[2].get('q')), float(x[2].get('q'))))
@@ -261,29 +270,20 @@ class AcceptHeaderRouter(object):
                 # We enforce the vnd.api.<api_name>+<type> convention to keep
                 # things simple.  E.g. vnd.api.myapi-v2+json or
                 # vnd.api.djangoappv3+xml
-                if subtype.startswith('vnd.api.%s+' % api_name):
+                api_subtype = '{}+'.format(self.api_subtype.format(api_name=api_name))
+                if subtype.startswith(api_subtype):
                     # This is our match.
                     # Rewrite the Accepts header, removing our
                     # vendor-specific api name so that the rest of our logic
                     # works the same way.
                     request.META['HTTP_ACCEPT'] = self._accept_range.replace(
-                        'vnd.api.%s+' % api_name, '')
+                        api_subtype, '')
                     return api_name
 
         return self._default_api_name
 
     def api_from_headers(self, request):
         return self._registry[self._api_name_from_headers(request)]
-
-    @property
-    def urls(self):
-        """
-        Provides URLconf details for the ``Api`` and all registered
-        ``Resources`` beneath it. Picks the correct ``Api`` based on
-        the provided Accept header.
-        """
-        api_name = self._api_name_from_headers()
-        return self._registry[api_name].urls
 
     def as_view(self):
         @csrf_exempt
@@ -295,6 +295,7 @@ class AcceptHeaderRouter(object):
 
             api = self.api_from_headers(request)
             api._reverse_url_prefix = url_prefix
+            api._accept_header_subtype = self.api_subtype
             # Set the URL prefix for all Resources in this API
             for name in api._registry:
                 api._registry[name]._meta._reverse_url_prefix = url_prefix

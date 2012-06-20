@@ -97,6 +97,43 @@ class HTTPTestCase(TestServerTestCase):
         self.assertEqual(response.status, 200)
         self.assertEqual(response.read(), expected_v2_json)
 
+    def test_get_custom_route(self):
+        connection = self.get_connection()
+
+        expected_v1_json = '{"meta": {"limit": 20, "next": null, "offset": 0, "previous": null, "total_count": 2}, "objects": [{"content": "This is my very first post using my shiny new API. Pretty sweet, huh?", "created": "2010-03-30T20:05:00", "id": 1, "is_active": true, "resource_uri": "/api_custom_router/notes/1/", "slug": "first-post", "title": "First Post!", "updated": "2010-03-30T20:05:00", "user": "/api_custom_router/users/1/"}, {"content": "The dog ate my cat today. He looks seriously uncomfortable.", "created": "2010-03-31T20:05:00", "id": 2, "is_active": true, "resource_uri": "/api_custom_router/notes/2/", "slug": "another-post", "title": "Another Post", "updated": "2010-03-31T20:05:00", "user": "/api_custom_router/users/1/"}]}'
+        expected_v2_json = '{"meta": {"limit": 20, "next": null, "offset": 0, "previous": null, "total_count": 2}, "objects": [{"content": "This is my very first post using my shiny new API. Pretty sweet, huh?", "created": "2010-03-30T20:05:00", "custom_field": "Whatever you want", "id": 1, "is_active": true, "resource_uri": "/api_custom_router/notes/1/", "slug": "first-post", "title": "First Post!", "updated": "2010-03-30T20:05:00", "user": "/api_custom_router/users/1/"}, {"content": "The dog ate my cat today. He looks seriously uncomfortable.", "created": "2010-03-31T20:05:00", "custom_field": "Whatever you want", "id": 2, "is_active": true, "resource_uri": "/api_custom_router/notes/2/", "slug": "another-post", "title": "Another Post", "updated": "2010-03-31T20:05:00", "user": "/api_custom_router/users/1/"}]}'
+        
+        # Default
+        connection.request('GET', '/api_custom_router/notes/', headers={'Accept': 'application/json'})
+        response = connection.getresponse()
+        connection.close()
+        self.assertEqual(response.status, 200)
+        self.assertEqual(response.read(), expected_v2_json)
+
+        # wrong subtype - receive default
+        connection.request('GET', '/api_custom_router/notes/', headers={'Accept': 'application/vnd.api.v1+json'})
+        response = connection.getresponse()
+        connection.close()
+        self.assertEqual(response.status, 200)
+        self.assertEqual(response.read(), expected_v2_json)
+
+        # v1
+        connection.request('GET', '/api_custom_router/notes/', headers={'Accept': 'application/vnd.hello.v1+json'})
+        response = connection.getresponse()
+        connection.close()
+        self.assertEqual(response.status, 200)
+        self.assertEqual(response.read(), expected_v1_json)
+
+        # v2
+        connection.request('GET', '/api_custom_router/notes/', headers={'Accept': 'application/vnd.hello.v2+json'})
+        response = connection.getresponse()
+        connection.close()
+        
+        self.assertEqual(response.getheader('Content-Type'),
+                         'application/vnd.hello.v2+json; charset=utf-8')
+        self.assertEqual(response.status, 200)
+        self.assertEqual(response.read(), expected_v2_json)
+
     def test_post_object_default(self):
         connection = self.get_connection()
 

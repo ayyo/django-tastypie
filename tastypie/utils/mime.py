@@ -47,7 +47,7 @@ def build_content_type(format, encoding='utf-8', api=None):
     """
     if api and api._accept_header_routing:
         type, subtype, vars = mimeparse.parse_mime_type(format)
-        subtype = 'vnd.api.%s+%s' % (api.api_name, subtype)
+        subtype = '%s+%s' % (api.subtype, subtype)
         attributes = ''
         for k, v in vars.iteritems():
             attributes += '; %s=%s' % (k, v)

@@ -304,12 +304,6 @@ class Resource(object):
             url(r"^(?P<resource_name>%s)/(?P<%s>\w[\w/-]*)%s$" % (self._meta.resource_name, self._meta.detail_uri_name, trailing_slash()), self.wrap_view('dispatch_detail'), name="api_dispatch_detail"),
         ]
 
-    def override_urls(self):
-        """
-        Deprecated. Will be removed by v1.0.0. Please use ``prepend_urls`` instead.
-        """
-        return []
-
     def prepend_urls(self):
         """
         A hook for adding your own URLs or matching before the default URLs.
@@ -326,10 +320,6 @@ class Resource(object):
         a URLconf should you choose to.
         """
         urls = self.prepend_urls()
-
-        if self.override_urls():
-            warnings.warn("'override_urls' is a deprecated method & will be removed by v1.0.0. Please rename your method to ``prepend_urls``.")
-            urls += self.override_urls()
 
         urls += self.base_urls()
         urlpatterns = patterns('',

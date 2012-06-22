@@ -164,8 +164,11 @@ class Api(object):
             options['callback'] = callback
 
         serialized = serializer.serialize(available_resources, desired_format, options)
-        content_type = build_content_type(desired_format, api=self)
+        content_type = self._build_content_type(desired_format)
         return HttpResponse(content=serialized, content_type=content_type)
+
+    def _build_content_type(self, format, encoding='utf-8'):
+        return build_content_type(format=format, encoding=encoding, api=self)
 
     def _build_reverse_url(self, name, args=None, kwargs=None):
         """

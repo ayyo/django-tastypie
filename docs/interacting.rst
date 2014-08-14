@@ -45,7 +45,7 @@ We'll assume that we're interacting with the following Tastypie code::
 
 
     # urls.py
-    from django.conf.urls.defaults import *
+    from django.conf.urls import *
     from tastypie.api import Api
     from myapp.api.resources import EntryResource, UserResource
 
@@ -528,7 +528,7 @@ presumably did not change.
 
 .. note::
 
-    A ``PUT`` request requires that the entire resource representation be enclosed. Missing fields may cause errors, or be filled in by default values. 
+    A ``PUT`` request requires that the entire resource representation be enclosed. Missing fields may cause errors, or be filled in by default values.
 
 
 Partially Updating An Existing Resource (PATCH)
@@ -666,7 +666,7 @@ We should get back::
     Content-Length: 0
     Content-Type: text/html; charset=utf-8
 
-The Accepted response means the server has accepted the request, but gives no details on the result. In order to see any created resources, we would need to do a get ``GET`` on the list endpoint. 
+The Accepted response means the server has accepted the request, but gives no details on the result. In order to see any created resources, we would need to do a get ``GET`` on the list endpoint.
 
 For detailed information on the format of a bulk request, see :ref:`patch-list`.
 

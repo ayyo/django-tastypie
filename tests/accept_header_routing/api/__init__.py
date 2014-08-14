@@ -1,4 +1,4 @@
-from django.conf.urls.defaults import *
+from django.conf.urls import *
 from tastypie.api import Api, AcceptHeaderRouter
 from accept_header_routing.api.resources import (NoteResource, UserResource,
     BusinessResource, OrganizationResource, NoteResource2)

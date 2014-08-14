@@ -1,4 +1,4 @@
-from django.conf.urls.defaults import url
+from django.conf.urls import url
 from django.contrib.auth.models import User
 from tastypie.bundle import Bundle
 from tastypie import fields
